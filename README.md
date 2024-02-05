@@ -5,6 +5,7 @@ You can find some instructions here: https://ivanderevianko.com/2020/12/diy-stai
 Before you can run this do the following:
 
 ```bash
+sudo apt-get install python3-rpi.gpio python3-pip
 sudo pip install rpi_ws281x
 ```
 
