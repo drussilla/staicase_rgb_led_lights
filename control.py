@@ -1,4 +1,5 @@
 import time
+import datetime
 import argparse
 import colorsys
 
@@ -69,18 +70,8 @@ def rainbowCycle(strip1, strip2, wait_ms=1, iterations=500):
         strip2.show()
         time.sleep(wait_ms / 1000.0)
 
-def slowOnBottomToTop(led_indexes):
-    """Draw rainbow that uniformly distributes itself across all pixels."""
+def yellowFullFill(led_indexes):
     for stair in led_indexes:
-        for value in range(4):
-            for i in range(len(stair) - 1):
-                color = hsv2rgb(0.05, 1, value/10.0)
-                stair[0].setPixelColor(stair[i+1], Color(color[0], color[1], color[2]))
-            stair[0].show()
-            time.sleep(5/1000)
-
-def slowOnTopToBottom(led_indexes):
-    for stair in reversed(led_indexes):
         for value in range(4):
             for i in range(len(stair) - 1):
                 color = hsv2rgb(0.05, 1, value/10.0)
@@ -99,6 +90,12 @@ def rainbowPerStair(strip1, strip2, led_indexes, wait_ms=20, iterations=50):
         time.sleep(wait_ms / 1000.0)
 
 def map_leds(strip1, strip2):
+    """
+    Maps two different led strips to the signe data structure that is easy to work with
+    Retunrs array of "stairs". Each stair it an array itself. where the first element is NeoPixel object to control strip
+    And the rest elements in the "stair" inner array is the indexes of the individual leds in the strip.
+    [ [strip1, 0, 1, 2, 3], [strip1, 4, 5, 6, 7, 8], ... [strip2, 178, 177, 176], [strip2, 175, 174, ...] ]
+    """
     led_indexes = []
     indexes_used = 0
     for i in range(len(leds_per_stair)):
@@ -122,6 +119,7 @@ if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser() 
     parser.add_argument('-c', '--clear', action='store_true', help='clear the display on exit')
+    parser.add_argument('-m', '--mode', help='set mode: rainbow, detect', default='detect')
     args = parser.parse_args()
 
     # Create NeoPixel objects with appropriate configuration for each strip.                            │
@@ -129,7 +127,7 @@ if __name__ == '__main__':
 
     strip2 = Adafruit_NeoPixel(LED_2_COUNT, LED_2_PIN, LED_2_FREQ_HZ, LED_2_DMA, LED_2_INVERT, LED_2_BRIGHTNESS, LED_2_CHANNEL, LED_STRIP_TYPE)
 
-    led_indexes= map_leds(strip1, strip2)
+    led_indexes = map_leds(strip1, strip2)
 
     # Intialize the library (must be called once before other functions).                               │
     strip1.begin()
@@ -140,27 +138,26 @@ if __name__ == '__main__':
     GPIO.setup(11, GPIO.IN)
     GPIO.setup(13, GPIO.IN) 
 
+    print(f'Mode: {args.mode}')
     print('Press Ctrl-C to quit.')
 
     try:
-        while True:
-            rainbowCycle(strip1, strip2)
-    except KeyboardInterrupt:
-        colorWipe(led_indexes, Color(0, 0, 0), 2)
-#    rainbowPerStair(strip1, strip2, led_indexes)
-    try:
-        while True:
-            top = GPIO.input(11)
-            bottom = GPIO.input(13)
-            if bottom == 1:
-                slowOnBottomToTop(led_indexes)
-                time.sleep(15)            
-                colorWipe(led_indexes, Color(0, 0, 0), 5)
-            elif top == 1:
-                slowOnTopToBottom(led_indexes)
-                time.sleep(15)            
-                colorWipe(led_indexes, Color(0, 0, 0), 5)
-                
+        if args.mode == 'rainbow':
+            while True:
+                rainbowCycle(strip1, strip2)
+        else:
+            while True:
+                top = GPIO.input(11)
+                bottom = GPIO.input(13)
+                if bottom == 1:
+                    yellowFullFill(led_indexes)
+                    time.sleep(15)            
+                    colorWipe(led_indexes, Color(0, 0, 0), 5)
+                elif top == 1:
+                    yellowFullFill(reversed(led_indexes))
+                    time.sleep(15)            
+                    colorWipe(led_indexes, Color(0, 0, 0), 5)
+                    
     except KeyboardInterrupt:  
         if args.clear: 
             colorWipe(led_indexes, Color(0, 0, 0), 2)
