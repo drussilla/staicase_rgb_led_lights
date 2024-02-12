@@ -77,7 +77,21 @@ def yellowFullFill(led_indexes):
                 color = hsv2rgb(0.05, 1, value/10.0)
                 stair[0].setPixelColor(stair[i+1], Color(color[0], color[1], color[2]))
             stair[0].show()
-            time.sleep(5/1000)                
+            time.sleep(5/1000)
+
+def yellowNightFill(led_indexes):
+    for stair in led_indexes:
+        for value in range(2):
+            color = hsv2rgb(0.05, 1, value/10.0)
+            stair[0].setPixelColor(stair[1], Color(color[0], color[1], color[2]))
+            stair[0].show()
+            time.sleep(5/1000)
+
+def yellowFill(led_indexes):
+    if datetime.datetime.datetime.now().hour >= 21:
+        yellowNightFill(led_indexes)
+    else:
+        yellowFullFill(led_indexes)
 
 def rainbowPerStair(strip1, strip2, led_indexes, wait_ms=20, iterations=50):
     """Draw rainbow that uniformly distributes itself across pixels of each stair."""
@@ -150,11 +164,11 @@ if __name__ == '__main__':
                 top = GPIO.input(11)
                 bottom = GPIO.input(13)
                 if bottom == 1:
-                    yellowFullFill(led_indexes)
+                    yellowFill(led_indexes)
                     time.sleep(15)            
                     colorWipe(led_indexes, Color(0, 0, 0), 5)
                 elif top == 1:
-                    yellowFullFill(reversed(led_indexes))
+                    yellowFill(reversed(led_indexes))
                     time.sleep(15)            
                     colorWipe(led_indexes, Color(0, 0, 0), 5)
                     
