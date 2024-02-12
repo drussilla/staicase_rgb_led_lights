@@ -112,6 +112,7 @@ def map_leds(strip1, strip2):
     """
     led_indexes = []
     indexes_used = 0
+    leds_used = 0
     for i in range(len(leds_per_stair)):
         if i < 11:
             led_indexes.append([strip1])
@@ -124,9 +125,11 @@ def map_leds(strip1, strip2):
                 indexes_used = 0
         else:
             led_indexes.append([strip2])
+            leds_used += leds_per_stair[i]
             for j in range(leds_per_stair[i]):
-                led_indexes[i].append(indexes_used)
-                indexes_used = indexes_used + 1   
+                led_indexes[i].append(leds_used - 1 - indexes_used)
+                indexes_used = indexes_used + 1
+            
     return led_indexes
 
 if __name__ == '__main__': 
