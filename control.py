@@ -89,7 +89,7 @@ def yellowNightFill(led_indexes):
 
 def yellowFill(led_indexes):
     current_time = datetime.datetime.now()
-    if current_time.hour >= 20 or current_time <= 8:
+    if current_time.hour >= 20 or current_time.hour <= 8:
         yellowNightFill(led_indexes)
     else:
         yellowFullFill(led_indexes)
