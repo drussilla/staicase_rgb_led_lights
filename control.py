@@ -104,6 +104,65 @@ def rainbowPerStair(strip1, strip2, led_indexes, wait_ms=20, iterations=50):
         strip2.show()
         time.sleep(wait_ms / 1000.0)
 
+import random
+
+def fireEffect(led_indexes, cooling=55, sparking=120, speed_delay=50):
+    """
+    Simulate a fire effect on the LED strips.
+    :param led_indexes: Mapped LED indexes for the strips.
+    :param cooling: Amount of heat cooling per frame (higher = faster cooling).
+    :param sparking: Chance (0-255) of sparking new heat at the base.
+    :param speed_delay: Delay between frames in milliseconds.
+    """
+    # Create an array to store heat values for each LED.
+    heat = [0] * sum(len(stair) - 1 for stair in led_indexes)
+    
+    while True:
+        # Step 1: Cool down every LED a little
+        for i in range(len(heat)):
+            heat[i] = max(0, heat[i] - random.randint(0, (cooling * 10) // len(heat) + 2))
+        
+        # Step 2: Heat drifts up and diffuses
+        for i in range(len(heat) - 1, 1, -1):
+            heat[i] = (heat[i - 1] + heat[i - 2] + heat[i - 2]) // 3
+        
+        # Step 3: Randomly ignite new sparks at the bottom
+        if random.randint(0, 255) < sparking:
+            y = random.randint(0, len(led_indexes[0]) - 2)  # Choose a random bottom LED
+            heat[y] = min(255, heat[y] + random.randint(160, 255))
+        
+        # Step 4: Map heat to LED colors
+        led_index = 0
+        for stair in led_indexes:
+            for i in range(1, len(stair)):
+                color = heatToColor(heat[led_index])
+                stair[0].setPixelColor(stair[i], color)
+                led_index += 1
+        
+        # Show the updated colors
+        for stair in led_indexes:
+            stair[0].show()
+        
+        # Delay between frames
+        time.sleep(speed_delay / 1000.0)
+
+def heatToColor(temperature):
+    """
+    Convert a heat value (0-255) to a color.
+    :param temperature: Heat value to convert.
+    :return: Color object for the LED
+    """
+    # Scale heat to RGB based on a "fire" color palette
+    t192 = (temperature * 192) // 255  # Scale to 0-192
+    heat_ramp = t192 & 0x3F  # 0..63 ramp up
+    if t192 > 0x80:  # Heat >= 128
+        return Color(255, 255, heat_ramp * 4)  # Full Red, Full Green, Ramp Blue
+    elif t192 > 0x40:  # Heat >= 64
+        return Color(255, heat_ramp * 4, 0)  # Full Red, Ramp Green, No Blue
+    else:  # Cool colors
+        return Color(heat_ramp * 4, 0, 0)  # Ramp Red, No Green, No Blue
+
+
 def map_leds(strip1, strip2):
     """
     Maps two different led strips to the signe data structure that is easy to work with
@@ -160,6 +219,8 @@ if __name__ == '__main__':
         if args.mode == 'rainbow':
             while True:
                 rainbowCycle(strip1, strip2)
+        elif args.mode == 'fire':
+            fireEffect(led_indexes)
         else:
             while True:
                 top = GPIO.input(11)
