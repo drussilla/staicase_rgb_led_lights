@@ -221,6 +221,9 @@ if __name__ == '__main__':
                 rainbowCycle(strip1, strip2)
         elif args.mode == 'fire':
             fireEffect(led_indexes)
+        elif args.mode == 'rainbow_per_stair':
+            while True:
+                rainbowPerStair(strip1, strip2, led_indexes)
         else:
             while True:
                 top = GPIO.input(11)
